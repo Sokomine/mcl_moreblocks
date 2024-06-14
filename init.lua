@@ -17,6 +17,11 @@ mcl_moreblocks.add_block = function(nodename)
 			ndef.use_texture_alpha = "clip" -- only needed for stairs API
 		end
 
+		-- the shapes shall not be falling nodes (especially not the concrete powder)
+		if(ndef.groups and ndef.groups.falling_node) then
+			ndef.groups.falling_node = nil
+		end
+
 		stairsplus:register_all(mod, name, nodename, ndef)
 	end
 end
@@ -79,10 +84,55 @@ mcl_moreblocks.add_nodes = function()
 		-- not really a stair node in mcl - yet it's worth supporting
 		"mcl_core:glass",
 	}
+	-- in the MineClonia world (but not in MCL2 world), tree trunks cannot be cut; add them:
+	if(minetest.registered_nodes["mcl_trees:tree_oak"]) then
+		table.insert(other_nodes, "mcl_trees:tree_oak")
+		table.insert(other_nodes, "mcl_trees:tree_dark_oak")
+		table.insert(other_nodes, "mcl_trees:tree_jungle")
+		table.insert(other_nodes, "mcl_trees:tree_spruce")
+		table.insert(other_nodes, "mcl_trees:tree_acacia")
+		table.insert(other_nodes, "mcl_trees:tree_birch")
+		table.insert(other_nodes, "mcl_trees:tree_willow")
+		table.insert(other_nodes, "mcl_trees:tree_crimson")
+		table.insert(other_nodes, "mcl_trees:tree_warped")
+		table.insert(other_nodes, "mcl_trees:tree_bamboo")
+		table.insert(other_nodes, "mcl_trees:tree_mangrove")
+		table.insert(other_nodes, "mcl_trees:tree_cherry_blossom")
+	end
+
+	-- concrete powder has a fine texture and diffrent colors
+
+	-- MineClonia version
+	if(mcl_dyes and mcl_dyes.colors) then
+		for color,colordef in pairs(mcl_dyes.colors) do
+			-- concrete powder (cut shapes will be created as non-falling nodes)
+			table.insert(other_nodes, "mcl_colorblocks:concrete_powder_"..color)
+			-- wool
+			table.insert(other_nodes, "mcl_wool:"..color)
+		end
+
+	-- MineClone2 version
+	else
+		local dyes = {"white", "grey","silver","black","red","yellow","green",
+			"cyan","blue","magenta","orange","purple","brown","pink","lime",
+			"light_blue"
+		}
+		for _, color in ipairs(dyes) do
+			-- concrete powder (cut shapes will be created as non-falling nodes)
+			table.insert(other_nodes, "mcl_colorblocks:concrete_powder_"..color)
+			-- wool
+			table.insert(other_nodes, "mcl_wool:"..color)
+			-- glass does not work that well (only the frame gets colored)
+			--table.insert(other_nodes, "mcl_core:glass_"..color)
+		end
+	end
+
+
 	-- actually register them with the saw
 	for i, name in ipairs(other_nodes) do
 		mcl_moreblocks.add_block(name)
 	end
+
 end
 -- give the mods time enough to load
 minetest.after(0, mcl_moreblocks.add_nodes)
@@ -124,3 +174,4 @@ if minetest.settings:get_bool("moreblocks.circular_saw_crafting") ~= false then 
 		}
 	})
 end
+
